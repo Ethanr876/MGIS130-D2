@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Loan Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+
+    <noscript><p class="note">This calculator needs JavaScript turned on.</p></noscript>
+
+    <div class="layout screen-only">
+
+      <!-- ============ SETUP (dark green panel) ============ -->
+      <section class="panel setup" aria-labelledby="setup-title">
+        <h1 id="setup-title">Loan Calculator</h1>
+        <p class="lead">Drag a slider, or type an exact number.</p>
+
+        <div class="seg" role="group" aria-label="Calculator mode">
+          <button type="button" id="mode-loan" aria-pressed="true">Monthly payment</button>
+          <button type="button" id="mode-afford" aria-pressed="false">What can I afford?</button>
+        </div>
+
+        <div class="field" id="field-amount">
+          <div class="field-head">
+            <label for="amount">I want to borrow</label>
+            <div class="num lg"><span class="pre">$</span><input id="num-amount" type="number" inputmode="decimal" step="any" aria-label="Loan amount (type an exact value)"></div>
+          </div>
+          <input id="amount" type="range" min="1000" max="500000" step="500" value="20000">
+        </div>
+
+        <div class="field" id="field-payment" hidden>
+          <div class="field-head">
+            <label for="payment">I can pay up to</label>
+            <div class="num lg"><span class="pre">$</span><input id="num-payment" type="number" inputmode="decimal" step="any" aria-label="Maximum monthly payment (type an exact value)"><span class="suf">/mo</span></div>
+          </div>
+          <input id="payment" type="range" min="50" max="5000" step="25" value="400">
+        </div>
+
+        <div class="field">
+          <div class="field-head">
+            <label for="rate">at an interest rate of</label>
+            <div class="num"><input id="num-rate" type="number" inputmode="decimal" step="any" aria-label="Interest rate (type an exact value)"><span class="suf">%</span></div>
+          </div>
+          <input id="rate" type="range" min="0" max="30" step="0.1" value="6.5">
+        </div>
+
+        <div class="field">
+          <div class="field-head">
+            <label for="years">and repay it over</label>
+            <div class="num"><input id="num-years" type="number" inputmode="decimal" step="any" aria-label="Loan term in years (type an exact value)"><span class="suf">years</span></div>
+          </div>
+          <input id="years" type="range" min="1" max="30" step="1" value="5">
+        </div>
+
+        <div class="seg seg-freq" id="freq-group" role="group" aria-label="Show payment per">
+          <button type="button" data-freq="fortnightly" aria-pressed="false">Fortnightly</button>
+          <button type="button" data-freq="weekly" aria-pressed="false">Weekly</button>
+          <button type="button" data-freq="monthly" aria-pressed="true">Monthly</button>
+        </div>
+        <p class="note" id="freq-note" hidden>Weekly and fortnightly amounts are estimates
+          (monthly payment × 12 ÷ 52 or 26). The schedule and totals use monthly payments.</p>
+
+        <hr>
+
+        <div class="field">
+          <div class="field-head">
+            <label for="extra">Extra payment each month</label>
+            <div class="num"><span class="pre">$</span><input id="num-extra" type="number" inputmode="decimal" step="any" aria-label="Extra payment per month (type an exact value)"><span class="suf">/mo</span></div>
+          </div>
+          <input id="extra" type="range" min="0" max="500" step="5" value="0">
+          <div class="chips" role="group" aria-label="Quick extra payment amounts">
+            <button type="button" class="chip" data-extra="0">None</button>
+            <button type="button" class="chip" data-extra="20">+$20</button>
+            <button type="button" class="chip" data-extra="50">+$50</button>
+            <button type="button" class="chip" data-extra="100">+$100</button>
+          </div>
+        </div>
+
+        <hr>
+
+        <label class="switch">
+          <input type="checkbox" id="fees-on">
+          <span>Include fees &amp; penalties</span>
+        </label>
+
+        <div id="fee-fields" hidden>
+          <div class="field">
+            <div class="field-head">
+              <label for="fee">Origination fee <span class="hint" id="hint-fee"></span></label>
+              <div class="num"><input id="num-fee" type="number" inputmode="decimal" step="any" aria-label="Origination fee percent (type an exact value)"><span class="suf">%</span></div>
+            </div>
+            <input id="fee" type="range" min="0" max="10" step="0.25" value="3">
+          </div>
+          <div class="field">
+            <div class="field-head">
+              <label for="penalty">Prepayment penalty (of extra payments)</label>
+              <div class="num"><input id="num-penalty" type="number" inputmode="decimal" step="any" aria-label="Prepayment penalty percent (type an exact value)"><span class="suf">%</span></div>
+            </div>
+            <input id="penalty" type="range" min="0" max="5" step="0.25" value="2">
+          </div>
+          <p class="note">The origination fee is taken out of the money you receive.
+            The penalty only applies to extra payments.</p>
+        </div>
+      </section>
+
+      <!-- ============ RESULTS (bright green panel) ============ -->
+      <section class="panel results" id="results" aria-labelledby="results-title">
+        <h2 id="results-title" class="visually-hidden">Results</h2>
+
+        <div class="hero">
+          <p class="hero-label" id="primary-label">At this rate you'll pay</p>
+          <div class="hero-figure">
+            <p class="big-number" id="primary-value"></p>
+            <p class="unit" id="primary-unit"></p>
+          </div>
+        </div>
+        <p class="sub-line" id="primary-sub" hidden></p>
+
+        <p class="payoff">Debt-free by <strong id="payoff-date"></strong></p>
+
+        <div class="badges">
+          <span class="badge" id="badge-months" hidden></span>
+          <span class="badge" id="badge-interest" hidden></span>
+        </div>
+        <p class="note" id="extra-hint">Add an extra monthly payment to see how much
+          time and interest you could save.</p>
+
+        <div class="chart-wrap">
+          <div class="donut">
+            <svg id="pie" class="pie" viewBox="0 0 100 100" role="img" aria-label="Chart of principal versus interest">
+              <g transform="rotate(-90 50 50)">
+                <circle id="slice-principal" class="slice slice-principal" cx="50" cy="50" r="38"></circle>
+                <circle id="slice-interest" class="slice slice-interest" cx="50" cy="50" r="38"></circle>
+                <circle id="slice-fees" class="slice slice-fees" cx="50" cy="50" r="38"></circle>
+              </g>
+            </svg>
+            <div class="donut-center">
+              <strong id="donut-pct"></strong>
+              <span>interest</span>
+            </div>
+          </div>
+          <ul class="legend">
+            <li data-slice="principal"><span class="swatch principal"></span>Principal
+              <strong id="principal-total"></strong>
+              <span id="principal-pct" class="pct"></span></li>
+            <li data-slice="interest"><span class="swatch interest"></span>Interest
+              <strong id="interest-total"></strong>
+              <span id="interest-pct" class="pct"></span></li>
+            <li id="legend-fees" data-slice="fees" hidden><span class="swatch fees"></span>Fees &amp; penalties
+              <strong id="fees-total"></strong>
+              <span id="fees-pct" class="pct"></span></li>
+          </ul>
+        </div>
+
+        <dl class="summary">
+          <div><dt>Monthly payment</dt><dd id="sum-monthly"></dd></div>
+          <div><dt>Number of payments</dt><dd id="sum-count"></dd></div>
+          <div><dt>Total interest</dt><dd id="sum-interest"></dd></div>
+          <div id="row-fees" hidden><dt>Fees &amp; penalties</dt><dd id="sum-fees"></dd></div>
+          <div id="row-apr" hidden><dt>Effective APR</dt><dd id="sum-apr"></dd></div>
+          <div><dt>Total you'll pay</dt><dd id="sum-total"></dd></div>
+        </dl>
+
+        <div class="actions">
+          <button type="button" id="pin" class="pill pill-white">
+            <span id="pin-label">Pin this setup</span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </button>
+          <button type="button" id="share" class="pill pill-ghost">Copy link</button>
+          <button type="button" id="print" class="pill pill-ghost">Print / PDF</button>
+        </div>
+        <p class="note" id="share-status" role="status"></p>
+        <p class="note">Printing includes the full month-by-month schedule.
+          Choose "Save as PDF" in the print window to get a file.</p>
+      </section>
+    </div>
+
+    <div class="lower screen-only">
+
+      <!-- ============ COMPARE ============ -->
+      <section class="panel compare-panel" aria-labelledby="compare-title">
+        <h2 id="compare-title">Compare setups</h2>
+        <p class="note" id="compare-hint">Press "Pin this setup" in the green panel, then move
+          the sliders (try 3 years versus 5 years) to see the difference side by side.</p>
+
+        <table class="compare" id="compare-table" hidden>
+          <thead>
+            <tr><th scope="col"><span class="visually-hidden">Measure</span></th>
+                <th scope="col">Pinned</th><th scope="col">Now</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p class="compare-summary" id="compare-summary" hidden></p>
+
+        <div class="actions">
+          <button type="button" id="unpin" class="pill pill-ghost" hidden>Clear pin</button>
+        </div>
+      </section>
+
+      <!-- ============ COST EQUIVALENTS ============ -->
+      <section class="panel banner" aria-labelledby="equiv-title">
+        <h2 id="equiv-title">What the interest really costs</h2>
+        <ul class="equiv" id="equiv-list"></ul>
+        <p class="note" id="equiv-note"></p>
+      </section>
+    </div>
+
+    <p class="note disclaimer screen-only">Estimates only, not financial advice.
+      Real loans may round payments or charge other fees.</p>
+
+    <!-- Built by script.js, only visible when printing -->
+    <section id="print-area" class="print-only"></section>
+  </main>
+
+  <div id="chart-tip" class="chart-tip" aria-hidden="true" hidden></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
